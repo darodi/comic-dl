@@ -49,7 +49,7 @@ class MangaRock():
         return comic_name, re.sub('[^A-Za-z0-9.\-\+\' ]+', '', chapter_number_value.replace(":", " -"))
 
     @staticmethod
-    def file_decryption(path_to_files, conversion):
+    def file_decryption(path_to_files):
         """
         A REALLY BIG THANKS TO 'dradzenglor' for decrypting the files! Amazing work!
         Follow The Thread On Reddit : https://www.reddit.com/r/codes/comments/7mdx70/need_help_decrypting_this_string/
@@ -68,14 +68,6 @@ class MangaRock():
 
             # Let's delete the .mri file
             os.remove(mri_file)
-
-            # if a conversion is asked, convert to jpg
-            jpg_file = str(mri_file).replace(".mri", ".jpg")
-            if str(conversion) != "None":
-                im = Image.open(webp_file)
-                rgb_im = im.convert("RGB")
-                rgb_im.save(jpg_file)
-                os.remove(webp_file)
 
     def single_chapter(self, chapter_id, comic_name, chapter_number, download_directory, conversion, delete_files):
         image_api_link = "https://api.mangarockhd.com/query/web400/pages?oid=" + str(chapter_id)
@@ -103,7 +95,7 @@ class MangaRock():
                                                                file_names, links, self.logging)
             
         print("Decrypting Files...")
-        self.file_decryption(path_to_files=directory_path, conversion=conversion) # Calling the method that does the magic!
+        self.file_decryption(path_to_files=directory_path)  # Calling the method that does the magic!
 
         globalFunctions.GlobalFunctions().conversion(directory_path, conversion, delete_files, comic_name,
                                                      chapter_number)

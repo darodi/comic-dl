@@ -4,6 +4,7 @@ import re
 
 import cfscrape
 import requests
+from PIL import Image
 from bs4 import BeautifulSoup
 import os
 import shutil
@@ -110,7 +111,12 @@ class GlobalFunctions(object):
         main_directory.pop()
         converted_file_directory = str(os.sep.join(main_directory)) + os.sep
 
-        if str(conversion).lower().strip() in ['pdf']:
+        if str(conversion) == "None":
+            pass
+
+        result_format = str(conversion).lower().strip()
+
+        if result_format in ['pdf']:
             # Such kind of lambda functions and breaking is dangerous...
             im_files = [image_files for image_files in sorted(glob.glob(str(directory_path) + "/" + "*.jpg"),
                                                               key=lambda x: int(
@@ -132,7 +138,7 @@ class GlobalFunctions(object):
                 keep_files = "False"
                 pass
 
-        elif str(conversion).lower().strip() in ['cbz']:
+        elif result_format in ['cbz']:
 
             cbz_file_name = str(converted_file_directory) + "{0} - Ch {1}".format(comic_name, chapter_number)
             print("CBZ File : {0}".format(cbz_file_name))
@@ -154,14 +160,14 @@ class GlobalFunctions(object):
                 keep_files = "True"
                 pass
 
-        elif str(conversion) == "None":
-            pass
-
-        # to convert from webp to jpg,
-        # conversion is already done in comic_dl.sites.mangaRock.MangaRock#file_decryption
-        elif str(conversion).lower().strip() in ['jpg']:
-            pass
-
+        elif result_format in ['jpg'] or result_format in ['png']:
+            for webp_file in glob.glob(os.path.abspath(directory_path) + os.sep + "*.webp"):
+                format_file = str(webp_file).replace(".webp", "." + result_format)
+                im = Image.open(webp_file)
+                if result_format in ['jpg']:
+                    im = im.convert("RGB")
+                im.save(format_file)
+                os.remove(webp_file)
         else:
             print("Seems like that conversion isn't supported yet. Please report it on the repository...")
             pass
