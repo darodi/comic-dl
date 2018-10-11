@@ -160,14 +160,8 @@ class GlobalFunctions(object):
                 keep_files = "True"
                 pass
 
-        elif result_format in ['jpg'] or result_format in ['png']:
-            for webp_file in glob.glob(os.path.abspath(directory_path) + os.sep + "*.webp"):
-                format_file = str(webp_file).replace(".webp", "." + result_format)
-                im = Image.open(webp_file)
-                if result_format in ['jpg']:
-                    im = im.convert("RGB")
-                im.save(format_file)
-                os.remove(webp_file)
+        elif result_format in ['jpg', 'png']:
+            self.convert_image(directory_path, result_format, "webp")
         else:
             print("Seems like that conversion isn't supported yet. Please report it on the repository...")
             pass
@@ -180,6 +174,16 @@ class GlobalFunctions(object):
                 print(DirectoryDeleteError)
                 pass
             print("Deleted the files...")
+
+    @staticmethod
+    def convert_image(directory_path, result_format, in_format="webp"):
+        for webp_file in glob.glob(os.path.abspath(directory_path) + os.sep + "*." + in_format):
+            format_file = str(webp_file).replace(".%s" % in_format, ".%s" % result_format)
+            im = Image.open(webp_file)
+            if result_format in ['jpg']:
+                im = im.convert("RGB")
+            im.save(format_file)
+            os.remove(webp_file)
 
     def addOne(self, comicUrl):
         # @dsanchezseco
