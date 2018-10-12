@@ -112,7 +112,7 @@ class GlobalFunctions(object):
         converted_file_directory = str(os.sep.join(main_directory)) + os.sep
 
         if str(conversion) == "None":
-            pass
+            return
 
         result_format = str(conversion).lower().strip()
 
