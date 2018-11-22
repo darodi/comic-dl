@@ -7,6 +7,10 @@ import os
 import logging
 import time
 
+import js2py
+import jsbeautifier
+import requests
+
 
 class MangaFox(object):
     def __init__(self, manga_url, download_directory, chapter_range, **kwargs):
@@ -36,53 +40,54 @@ class MangaFox(object):
         return manga_name
 
     def single_chapter(self, comic_url, comic_name, download_directory, conversion, keep_files):
-        source, cookies_main = globalFunctions.GlobalFunctions().page_downloader(manga_url=comic_url)
+        raise NotImplementedError('not implemented mangafox download')
+        # source, cookies_main = globalFunctions.GlobalFunctions().page_downloader(manga_url=comic_url)
+        #
+        # s = str(source)
+        # chapter_id = re.search(r"var chapterid =(\d*);", s).group(1)
+        #
+        # key_js = re.search(r'(eval\(function\(p,a,c,k,e,d\){.*)', s).group(1)
+        # key = self.getkey(key_js)
+        #
+        # imagecount = re.search(r"var imagecount=(\d*);", s).group(1)
+        #
+        # # 'http://fanfox.net/manga/dungeon_meshi/vTBD/c049/1.html'
+        # chapter_number = comic_url.split('/')[len(comic_url.split('/'))-2]
+        #
+        # file_directory = globalFunctions.GlobalFunctions().create_file_directory(chapter_number, comic_name)
+        # # directory_path = os.path.realpath(file_directory)
+        # directory_path = os.path.realpath(str(download_directory) + "/" + str(file_directory))
+        #
+        # if not os.path.exists(directory_path):
+        #     os.makedirs(directory_path)
+        #
+        # links = []
+        # file_names = []
+        # for file_name in range(1, int(imagecount) + 1):
+        #     ajax_url = "/chapterfun.ashx?cid=" + chapter_id + "&page=" + str(file_name) + "&key=" + key
+        #     decode_url = re.sub("/[^/]*$", ajax_url, comic_url)
+        #     image_link, cookies_main = self.get_image_link(decode_url, cookies_main)
+        #     file_name_custom = str(
+        #         globalFunctions.GlobalFunctions().prepend_zeroes(file_name, int(imagecount) + 1)) + ".jpg"
+        #     file_names.append(file_name_custom)
+        #     links.append(image_link)
+        #
+        # globalFunctions.GlobalFunctions().multithread_download(chapter_number, comic_name, comic_url, directory_path,
+        #                                                        file_names, links, self.logging)
+        #
+        # globalFunctions.GlobalFunctions().conversion(directory_path, conversion, keep_files, comic_name,
+        #                                              chapter_number)
+        #
+        # return 0
 
-        current_chapter_volume = str(re.search(r"current_chapter=\"(.*?)\";", str(source)).group(1))
-        chapter_number = re.search(r"c(\d+(\.\d+)?)", current_chapter_volume).group(1)
-        series_code = str(re.search(r"series_code=\"(.*?)\";", str(source)).group(1))
-        current_page_number = int(str(re.search(r'current_page=(.*?)\;', str(source)).group(1)).strip())
-        last_page_number = int(str(re.search(r'total_pages=(.*?)\;', str(source)).group(1)).strip())
-
-        file_directory = globalFunctions.GlobalFunctions().create_file_directory(chapter_number, comic_name)
-        # directory_path = os.path.realpath(file_directory)
-        directory_path = os.path.realpath(str(download_directory) + "/" + str(file_directory))
-
-        if not os.path.exists(directory_path):
-            os.makedirs(directory_path)
-
-        links = []
-        file_names = []
-        for file_name in range(current_page_number, last_page_number + 1):
-            # print("Actual file_name : {0}".format(file_name))
-            # http://mangafox.me/manga/colette_wa_shinu_koto_ni_shita/v03/c019/2.html
-            chapter_url = "http://fanfox.net/manga/" + str(series_code) + "/" + str(
-                current_chapter_volume) + "/%s.html" % str(file_name)
-            logging.debug("Chapter Url : %s" % chapter_url)
-
-            source_new, cookies_new = globalFunctions.GlobalFunctions().page_downloader(manga_url=chapter_url,
-                                                                                        cookies=cookies_main)
-            image_link_finder = source_new.findAll('div', {'class': 'read_img'})
-            for current_chapter, link in enumerate(image_link_finder):
-                x = link.findAll('img')
-                for a in x:
-                    image_link = a['src']
-                    logging.debug("Image Link : %s" % image_link)
-
-                    current_chapter += 1
-                    file_name_custom = str(
-                        globalFunctions.GlobalFunctions().prepend_zeroes(file_name, last_page_number + 1)) + ".jpg"
-
-                    file_names.append(file_name_custom)
-                    links.append(image_link)
-
-        globalFunctions.GlobalFunctions().multithread_download(chapter_number, comic_name, comic_url, directory_path,
-                                                               file_names, links, self.logging)
-
-        globalFunctions.GlobalFunctions().conversion(directory_path, conversion, keep_files, comic_name,
-                                                     chapter_number)
-
-        return 0
+    def getkey(self, s):
+        js = jsbeautifier.beautify(s)
+        sub = re.sub(";\$.*", "", js)
+        sub = re.sub("\\\\'", "", sub)
+        sub = re.sub("\+", "", sub)
+        sub = re.sub(".*?= ", "", sub)
+        key = sub
+        return key
 
     def full_series(self, comic_url, comic_name, sorting, download_directory, chapter_range, conversion, keep_files):
         # http://mangafox.la/rss/gentleman_devil.xml
@@ -91,8 +96,8 @@ class MangaFox(object):
         source, cookies = globalFunctions.GlobalFunctions().page_downloader(manga_url=rss_url)
 
         # all_links = re.findall(r"href=\"(.*?)\" title=\"Thanks for", str(source))
-        all_links_temp = re.findall(r"<link/>(.*?).html", str(source))
-        all_links = ["http:" + str(link) + ".html" for link in all_links_temp]
+        all_links_temp = re.findall(r"<link/>([^<]*?).html", str(source))
+        all_links = [str(link) + ".html" for link in all_links_temp]
 
         logging.debug("All Links : %s" % all_links)
 
@@ -151,3 +156,14 @@ class MangaFox(object):
                 # time.sleep(5)  # Test wait for the issue #23
 
         return 0
+
+    def get_image_link(self, decode_url, cookies_main):
+        sess = requests.session()
+        get = sess.get(decode_url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/20100101 Firefox/63.0'},
+                       cookies=cookies_main)
+        source = get.text
+        scrambled_js = str(source)
+        js = jsbeautifier.beautify(scrambled_js)
+        result = js2py.eval_js(js)
+        return result[0], sess.cookies
